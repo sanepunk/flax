@@ -306,6 +306,14 @@ class MultiHeadAttention(Module):
       (default: True). If rngs is stored, we should split the module as
       `graphdef, params, nondiff = nnx.split(module, nnx.Param, ...)` where `nondiff`
       contains RNG object associated with stored `self.rngs`.
+    kernel_metadata: Optional metadata dictionary to set when initializing
+      the Dense layers.
+    out_kernel_metadata: Optional metadata dictionary to set when initializing
+      the output Dense layers. If None, the kernel_metadata is used.
+    bias_metadata: Optional metadata dictionary to set when initializing
+      the bias of the Dense layers.
+    out_bias_metadata: Optional metadata dictionary to set when initializing
+      the bias of the output Dense layers.. If None, the bias_metadata is used.
   """
 
   def __init__(
@@ -337,6 +345,10 @@ class MultiHeadAttention(Module):
     out_dot_general_cls: Any = None,
     rngs: rnglib.Rngs,
     keep_rngs: bool = True,
+    kernel_metadata: dict[str, Any] | None = None,
+    out_kernel_metadata: dict[str, Any] | None = None,
+    bias_metadata: dict[str, Any] | None = None,
+    out_bias_metadata: dict[str, Any] | None = None,
   ):
     self.num_heads = num_heads
     self.in_features = in_features
@@ -383,6 +395,8 @@ class MultiHeadAttention(Module):
       precision=self.precision,
       dot_general=self.qkv_dot_general,
       dot_general_cls=self.qkv_dot_general_cls,
+      kernel_metadata=kernel_metadata,
+      bias_metadata=bias_metadata,
     )
     # project inputs_q to multi-headed q/k/v
     # dimensions are then [batch..., length, n_heads, n_features_per_head]
@@ -401,6 +415,8 @@ class MultiHeadAttention(Module):
         dtype=self.dtype,
         param_dtype=self.param_dtype,
         rngs=rngs,
+        # TODO: Add scale_metadata
+        # scale_metadata=ln_scale_metadata,
       )
       self.key_ln = LayerNorm(
         self.head_dim,
@@ -408,6 +424,8 @@ class MultiHeadAttention(Module):
         dtype=self.dtype,
         param_dtype=self.param_dtype,
         rngs=rngs,
+        # TODO: Add scale_metadata
+        # scale_metadata=ln_scale_metadata,
       )
     else:
       self.query_ln = nnx.data(None)
@@ -426,6 +444,8 @@ class MultiHeadAttention(Module):
       dot_general=self.out_dot_general,
       dot_general_cls=self.out_dot_general_cls,
       rngs=rngs,
+      kernel_metadata=out_kernel_metadata or kernel_metadata,
+      bias_metadata=out_bias_metadata or bias_metadata,
     )
     self.rngs = rngs.dropout.fork() if keep_rngs and dropout_rate > 0 else None
 

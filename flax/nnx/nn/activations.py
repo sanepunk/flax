@@ -42,7 +42,7 @@ import jax.numpy as jnp
 from jax.numpy import tanh
 
 from flax import nnx
-from flax.typing import Array, Dtype
+from flax.typing import Any, Array, Dtype
 
 
 __all__ = [
@@ -98,14 +98,19 @@ class PReLU(nnx.Module):
   Args:
     negative_slope_init: the value to initialize the negative slope (default 0.01).
     param_dtype: the dtype passed to parameter initializers (default: float32).
+    negative_slope_metadata: Optional metadata dictionary to set when initializing
+      the negative slope.
   """
   def __init__(
     self,
     negative_slope_init: float = 0.01,
-    param_dtype: Dtype = jnp.float32
+    param_dtype: Dtype = jnp.float32,
+    negative_slope_metadata: dict[str, Any] | None = None,
   ):
+    if negative_slope_metadata is None:
+      negative_slope_metadata = {}
     self.negative_slope = nnx.Param(
-      jnp.asarray(negative_slope_init, dtype=param_dtype)
+      jnp.asarray(negative_slope_init, dtype=param_dtype), **negative_slope_metadata
     )
     self.param_dtype = param_dtype
 

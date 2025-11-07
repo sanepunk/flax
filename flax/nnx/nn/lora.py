@@ -75,6 +75,10 @@ class LoRA(Module):
     b_initializer: initializer function for the fan-out matrices. Default to
       `zero initializer`.
     lora_param_type: the type of the LoRA params.
+    a_metadata: Optional metadata dictionary to set when initializing
+      the fan-in matrices.
+    b_metadata: Optional metadata dictionary to set when initializing
+      the fan-out matrices.
   """
 
   def __init__(
@@ -90,6 +94,8 @@ class LoRA(Module):
     b_initializer: Initializer = default_b_initializer,
     lora_param_type: tp.Type[variablelib.Variable] = LoRAParam,
     rngs: rnglib.Rngs,
+    a_metadata: dict[str, tp.Any] | None = None,
+    b_metadata: dict[str, tp.Any] | None = None,
   ):
     self.in_features = in_features
     self.out_features = out_features
@@ -98,11 +104,17 @@ class LoRA(Module):
     self.lora_param_type = lora_param_type
     self.base_module = base_module
 
+    if a_metadata is None:
+      a_metadata = {}
     self.lora_a = lora_param_type(
-      a_initializer(rngs.params(), (in_features, lora_rank), param_dtype)
+      a_initializer(rngs.params(), (in_features, lora_rank), param_dtype),
+      **a_metadata,
     )
+    if b_metadata is None:
+      b_metadata = {}
     self.lora_b = lora_param_type(
-      b_initializer(rngs.params(), (lora_rank, out_features), param_dtype)
+      b_initializer(rngs.params(), (lora_rank, out_features), param_dtype),
+      **b_metadata,
     )
 
   def __call__(self, x: jax.Array):
@@ -154,6 +166,10 @@ class LoRALinear(Linear):
     b_initializer: initializer function for the fan-out matrices. Default to
       `zero initializer`.
     lora_param_type: the type of the LoRA params.
+    a_metadata: Optional metadata dictionary to set when initializing
+      the fan-in matrices.
+    b_metadata: Optional metadata dictionary to set when initializing
+      the fan-out matrices.
   """
 
   def __init__(
@@ -168,6 +184,8 @@ class LoRALinear(Linear):
       b_initializer: Initializer = default_b_initializer,
       lora_param_type: tp.Type[variablelib.Variable] = LoRAParam,
       rngs: rnglib.Rngs,
+      a_metadata: dict[str, tp.Any] | None = None,
+      b_metadata: dict[str, tp.Any] | None = None,
       **kwargs,
   ):
     super().__init__(in_features, out_features, rngs=rngs, **kwargs)
@@ -181,6 +199,8 @@ class LoRALinear(Linear):
         b_initializer=b_initializer,
         lora_param_type=lora_param_type,
         rngs=rngs,
+        a_metadata=a_metadata,
+        b_metadata=b_metadata,
     )
 
   def __call__(self, x: jax.Array):

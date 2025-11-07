@@ -273,6 +273,10 @@ class BatchNorm(Module):
     use_fast_variance: If true, use a faster, but less numerically stable,
       calculation for the variance.
     rngs: rng key.
+    bias_metadata: Optional metadata dictionary to set when initializing
+      the bias.
+    scale_metadata: Optional metadata dictionary to set when initializing
+      the scale.
   """
 
   def __init__(
@@ -293,6 +297,8 @@ class BatchNorm(Module):
     axis_index_groups: tp.Any = None,
     use_fast_variance: bool = True,
     rngs: rnglib.Rngs,
+    bias_metadata: dict[str, tp.Any] | None = None,
+    scale_metadata: dict[str, tp.Any] | None = None,
   ):
     feature_shape = (num_features,)
     self.mean = nnx.BatchStat(jnp.zeros(feature_shape, jnp.float32))
@@ -300,15 +306,19 @@ class BatchNorm(Module):
 
     self.scale: nnx.Param[jax.Array] | None
     if use_scale:
+      if scale_metadata is None:
+        scale_metadata = {}
       key = rngs.params()
-      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype))
+      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype), **scale_metadata)
     else:
       self.scale = nnx.data(None)
 
     self.bias: nnx.Param[jax.Array] | None
     if use_bias:
+      if bias_metadata is None:
+        bias_metadata = {}
       key = rngs.params()
-      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype))
+      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype), **bias_metadata)
     else:
       self.bias = nnx.data(None)
 
@@ -461,6 +471,10 @@ class LayerNorm(Module):
     use_fast_variance: If true, use a faster, but less numerically stable,
         calculation for the variance.
     rngs: rng key.
+    bias_metadata: Optional metadata dictionary to set when initializing
+      the bias.
+    scale_metadata: Optional metadata dictionary to set when initializing
+      the scale.
   """
 
   def __init__(
@@ -480,20 +494,26 @@ class LayerNorm(Module):
     axis_index_groups: tp.Any = None,
     use_fast_variance: bool = True,
     rngs: rnglib.Rngs,
+    bias_metadata: dict[str, tp.Any] | None = None,
+    scale_metadata: dict[str, tp.Any] | None = None,
   ):
     feature_shape = (num_features,)
 
     self.scale: nnx.Param[jax.Array] | None
     if use_scale:
+      if scale_metadata is None:
+        scale_metadata = {}
       key = rngs.params()
-      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype))
+      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype), **scale_metadata)
     else:
       self.scale = nnx.data(None)
 
     self.bias: nnx.Param[jax.Array] | None
     if use_bias:
+      if bias_metadata is None:
+        bias_metadata = {}
       key = rngs.params()
-      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype))
+      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype), **bias_metadata)
     else:
       self.bias = nnx.data(None)
 
@@ -590,6 +610,8 @@ class RMSNorm(Module):
     use_fast_variance: If true, use a faster, but less numerically stable,
         calculation for the variance.
     rngs: rng key.
+    scale_metadata: Optional metadata dictionary to set when initializing
+      the scale.
   """
 
   def __init__(
@@ -607,13 +629,16 @@ class RMSNorm(Module):
     axis_index_groups: tp.Any = None,
     use_fast_variance: bool = True,
     rngs: rnglib.Rngs,
+    scale_metadata: dict[str, tp.Any] | None = None,
   ):
     feature_shape = (num_features,)
 
     self.scale: nnx.Param[jax.Array] | None
     if use_scale:
+      if scale_metadata is None:
+        scale_metadata = {}
       key = rngs.params()
-      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype))
+      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype), **scale_metadata)
     else:
       self.scale = nnx.data(None)
 
@@ -731,6 +756,10 @@ class GroupNorm(Module):
     use_fast_variance: If true, use a faster, but less numerically stable,
       calculation for the variance.
     rngs: rng key.
+    bias_metadata: Optional metadata dictionary to set when initializing
+      the bias.
+    scale_metadata: Optional metadata dictionary to set when initializing
+      the scale.
   """
 
   def __init__(
@@ -751,6 +780,8 @@ class GroupNorm(Module):
     axis_index_groups: tp.Any = None,
     use_fast_variance: bool = True,
     rngs: rnglib.Rngs,
+    bias_metadata: dict[str, tp.Any] | None = None,
+    scale_metadata: dict[str, tp.Any] | None = None,
   ):
     self.feature_axis = -1
 
@@ -786,15 +817,19 @@ class GroupNorm(Module):
     feature_shape = (num_features,)
     self.scale: nnx.Param[jax.Array] | None
     if use_scale:
+      if scale_metadata is None:
+        scale_metadata = {}
       key = rngs.params()
-      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype))
+      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype), **scale_metadata)
     else:
       self.scale = nnx.data(None)
 
     self.bias: nnx.Param[jax.Array] | None
     if use_bias:
+      if bias_metadata is None:
+        bias_metadata = {}
       key = rngs.params()
-      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype))
+      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype), **bias_metadata)
     else:
       self.bias = nnx.data(None)
 
@@ -1061,6 +1096,10 @@ class InstanceNorm(Module):
     use_fast_variance: If true, use a faster, but less numerically stable,
       calculation for the variance.
     rngs: The rng key.
+    bias_metadata: Optional metadata dictionary to set when initializing
+      the bias.
+    scale_metadata: Optional metadata dictionary to set when initializing
+      the scale.
   """
 
   def __init__(
@@ -1079,19 +1118,25 @@ class InstanceNorm(Module):
     axis_index_groups: tp.Any = None,
     use_fast_variance: bool = True,
     rngs: rnglib.Rngs,
+    bias_metadata: dict[str, tp.Any] | None = None,
+    scale_metadata: dict[str, tp.Any] | None = None,
   ):
     feature_shape = (num_features,)
     self.scale: nnx.Param[jax.Array] | None
     if use_scale:
+      if scale_metadata is None:
+        scale_metadata = {}
       key = rngs.params()
-      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype))
+      self.scale = nnx.Param(scale_init(key, feature_shape, param_dtype), **scale_metadata)
     else:
       self.scale = None
 
     self.bias: nnx.Param[jax.Array] | None
     if use_bias:
+      if bias_metadata is None:
+        bias_metadata = {}
       key = rngs.params()
-      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype))
+      self.bias = nnx.Param(bias_init(key, feature_shape, param_dtype), **bias_metadata)
     else:
       self.bias = None
 

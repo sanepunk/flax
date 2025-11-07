@@ -128,6 +128,9 @@ class LSTMCell(RNNCellBase):
     carry_init: Initializer | None = None,
     keep_rngs: bool = False,
     rngs: rnglib.Rngs,
+    kernel_metadata: dict[str, Any] | None = None,
+    recurrent_kernel_metadata: dict[str, Any] | None = None,
+    bias_metadata: dict[str, Any] | None = None,
   ):
     self.in_features = in_features
     self.hidden_features = hidden_features
@@ -151,6 +154,7 @@ class LSTMCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=kernel_metadata,
     )
 
     dense_h = partial(
@@ -163,6 +167,8 @@ class LSTMCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=recurrent_kernel_metadata,
+      bias_metadata=bias_metadata,
     )
 
     self.ii = dense_i()
@@ -279,6 +285,17 @@ class OptimizedLSTMCell(RNNCellBase):
         bias_init: initializer for the bias parameters (default: initializers.zeros_init()).
         dtype: the dtype of the computation (default: infer from inputs and params).
         param_dtype: the dtype passed to parameter initializers (default: float32).
+        keep_rngs: whether to store the input rngs as attribute (i.e. `self.rngs = rngs`)
+          (default: True). If rngs is stored, we should split the module as
+          `graphdef, params, nondiff = nnx.split(module, nnx.Param, ...)` where `nondiff`
+          contains RNG object associated with stored `self.rngs`.
+        rngs: rng key.
+        kernel_metadata: Optional metadata dictionary to set when initializing
+          the kernels that transform the input.
+        recurrent_kernel_metadata: Optional metadata dictionary to set when initializing
+          the kernels that transform the hidden state.
+        bias_metadata: Optional metadata dictionary to set when initializing
+          the bias of layers that transform the hidden state.
     """
 
   def __init__(
@@ -296,6 +313,9 @@ class OptimizedLSTMCell(RNNCellBase):
     carry_init: Initializer | None = None,
     keep_rngs: bool = False,
     rngs: rnglib.Rngs,
+    kernel_metadata: dict[str, Any] | None = None,
+    recurrent_kernel_metadata: dict[str, Any] | None = None,
+    bias_metadata: dict[str, Any] | None = None,
   ):
     self.in_features = in_features
     self.hidden_features = hidden_features
@@ -318,6 +338,7 @@ class OptimizedLSTMCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=kernel_metadata,
     )
 
     self.dense_h = Linear(
@@ -329,6 +350,8 @@ class OptimizedLSTMCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=recurrent_kernel_metadata,
+      bias_metadata=bias_metadata,
     )
 
     if carry_init:
@@ -450,6 +473,9 @@ class SimpleCell(RNNCellBase):
     bias_init: Initializer = initializers.zeros_init(),
     keep_rngs: bool = False,
     rngs: rnglib.Rngs,
+    kernel_metadata: dict[str, Any] | None = None,
+    recurrent_kernel_metadata: dict[str, Any] | None = None,
+    bias_metadata: dict[str, Any] | None = None,
   ):
     self.in_features = in_features
     self.hidden_features = hidden_features
@@ -473,6 +499,7 @@ class SimpleCell(RNNCellBase):
       param_dtype=self.param_dtype,
       kernel_init=recurrent_kernel_init,
       rngs=rngs,
+      kernel_metadata=recurrent_kernel_metadata,
     )
     self.dense_i = Linear(
       in_features=self.in_features,
@@ -483,6 +510,8 @@ class SimpleCell(RNNCellBase):
       kernel_init=kernel_init,
       bias_init=bias_init,
       rngs=rngs,
+      kernel_metadata=kernel_metadata,
+      bias_metadata=bias_metadata,
     )
 
     if carry_init:
@@ -569,6 +598,17 @@ class GRUCell(RNNCellBase):
         bias_init: initializer for the bias parameters (default: initializers.zeros_init()).
         dtype: the dtype of the computation (default: None).
         param_dtype: the dtype passed to parameter initializers (default: float32).
+        keep_rngs: whether to store the input rngs as attribute (i.e. `self.rngs = rngs`)
+          (default: True). If rngs is stored, we should split the module as
+          `graphdef, params, nondiff = nnx.split(module, nnx.Param, ...)` where `nondiff`
+          contains RNG object associated with stored `self.rngs`.
+        rngs: rng key.
+        kernel_metadata: Optional metadata dictionary to set when initializing
+          the kernels that transform the input.
+        recurrent_kernel_metadata: Optional metadata dictionary to set when initializing
+          the kernels that transform the hidden state.
+        bias_metadata: Optional metadata dictionary to set when initializing
+          the bias of layers that transform the input.
     """
 
   def __init__(
@@ -586,6 +626,9 @@ class GRUCell(RNNCellBase):
     carry_init: Initializer | None = None,
     keep_rngs: bool = False,
     rngs: rnglib.Rngs,
+    kernel_metadata: dict[str, Any] | None = None,
+    recurrent_kernel_metadata: dict[str, Any] | None = None,
+    bias_metadata: dict[str, Any] | None = None,
   ):
     self.in_features = in_features
     self.hidden_features = hidden_features
@@ -609,6 +652,8 @@ class GRUCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=kernel_metadata,
+      bias_metadata=bias_metadata,
     )
 
     self.dense_h = Linear(
@@ -619,6 +664,7 @@ class GRUCell(RNNCellBase):
       dtype=self.dtype,
       param_dtype=self.param_dtype,
       rngs=rngs,
+      kernel_metadata=recurrent_kernel_metadata,
     )
 
     if carry_init:
